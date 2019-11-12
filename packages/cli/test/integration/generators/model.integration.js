@@ -8,10 +8,8 @@
 // Imports
 const path = require('path');
 const assert = require('yeoman-assert');
-const testlab = require('@loopback/testlab');
-
-const expect = testlab.expect;
-const TestSandbox = testlab.TestSandbox;
+const {expect, TestSandbox} = require('@loopback/testlab');
+const {remove} = require('fs-extra');
 
 const generator = path.join(__dirname, '../../../generators/model');
 const tests = require('../lib/artifact-generator')(generator);
@@ -111,6 +109,21 @@ describe('lb4 model integration', () => {
       await testUtils
         .executeGenerator(generator)
         .inDir(SANDBOX_PATH, () => testUtils.givenLBProject(SANDBOX_PATH))
+        .withPrompts({
+          name: 'test',
+          propName: null,
+        });
+
+      basicModelFileChecks(expectedModelFile, expectedIndexFile);
+    });
+
+    it('creates "src/models" directory if it does no exist', async () => {
+      await testUtils
+        .executeGenerator(generator)
+        .inDir(SANDBOX_PATH, async () => {
+          testUtils.givenLBProject(SANDBOX_PATH);
+          await remove(path.resolve(SANDBOX_PATH, 'src/models'));
+        })
         .withPrompts({
           name: 'test',
           propName: null,
