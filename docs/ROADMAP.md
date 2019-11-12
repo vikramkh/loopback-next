@@ -1,3 +1,69 @@
+## Q1 2020 Roadmap
+
+### Overview
+
+- Migration: it will continue to be our focus, including filling up the details
+  to the migration guide and adding tooling to make migration easier.
+- Tackle issues labelled as `bug` or `developer experience`
+- Issue cleanup: take some time to triage open issues and possibly some smaller
+  enhancements that we never get the time to do.
+
+### Scope
+
+#### Migration
+
+- Migration guide https://github.com/strongloop/loopback-next/issues/453
+  - continue the work in Q4 2019 for migrating:
+    - boot scripts
+    - model mixins
+    - remoting hooks
+- Tooling:
+  - improve existing commands like `import-lb3-models`
+  - add new commands (e.g. import datasources).
+
+### Inclusion of related models
+
+- Include related models with a custom scope
+  https://github.com/strongloop/loopback-next/issues/3453
+
+### From model definition to REST API with no custom repository/controller classes https://github.com/strongloop/loopback-next/issues/2036 
+
+#### Authentication
+
+- Auth0 example: Create a more realistic example than
+  https://github.com/raymondfeng/loopback4-example-auth0.
+
+#### API Connect / LoopBack 4 Integration
+
+- Spike on getting APIs created from LB4 imported into APIC,
+  https://github.com/strongloop/loopback-next/issues/4115
+
+#### Open Issues with `bug` or `developer experience` labels
+
+- Would like to put more time in tackling those. Will plan it as part of the
+  monthly milestone planning.
+
+### Stretch Goals
+
+#### From relation definition to REST API with auto-generated repository/controller classes https://github.com/strongloop/loopback-next/issues/2483
+
+- prereq: Completed
+  `From model definition to REST API with no custom repository/controller classes`
+  epic
+
+#### Robust handling of ObjectID type for MongoDB https://github.com/strongloop/loopback-next/issues/3720
+
+- Spike: robust handling of ObjectID type for MongoDB,
+  https://github.com/strongloop/loopback-next/issues/3456
+
+### Simplify requestBody annotation with schema options https://github.com/strongloop/loopback-next/issues/3872
+
+- Improve @requestBody, https://github.com/strongloop/loopback-next/issues/3496
+- [Refactor] Update controllers' CRUD functions in example packages,
+  https://github.com/strongloop/loopback-next/issues/3497
+
+---
+
 ## Q4 2019 Roadmap
 
 ### Overview
