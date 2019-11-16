@@ -12,10 +12,12 @@ import {
   supertest,
 } from '@loopback/testlab';
 import * as fs from 'fs';
-import {IncomingMessage, Server, ServerResponse} from 'http';
+import {Agent, IncomingMessage, Server, ServerResponse} from 'http';
 import * as os from 'os';
+import pEvent from 'p-event';
 import * as path from 'path';
 import {HttpOptions, HttpServer, HttpsOptions} from '../../';
+import {HttpServerOptions} from '../../http-server';
 
 describe('HttpServer (integration)', () => {
   let server: HttpServer | undefined;
@@ -47,6 +49,42 @@ describe('HttpServer (integration)', () => {
     await server.start();
     await server.stop();
     await expect(httpGetAsync(server.url)).to.be.rejectedWith(/ECONNREFUSED/);
+  });
+
+  it('stops server with grace period and inflight request', async () => {
+    const serverOptions = givenHttpServerConfig() as HttpServerOptions;
+    serverOptions.gracePeriodForClose = 1000;
+    server = new HttpServer(createRequestHandler(100), serverOptions);
+    await server.start();
+    const agent = new Agent({keepAlive: true});
+    // Send a request with keep-alive
+    const req = httpGetAsync(server.url, agent);
+    // Wait until the request is accepted by the server
+    await pEvent(server.server, 'request');
+    // Stop the server
+    await server.stop();
+    // No more new connections are accepted
+    await expect(httpGetAsync(server.url)).to.be.rejectedWith(/ECONNREFUSED/);
+    // The in-flight task can finish before the grace period
+    await req;
+  });
+
+  it('stops server with shorter grace period and inflight request', async () => {
+    const serverOptions = givenHttpServerConfig() as HttpServerOptions;
+    serverOptions.gracePeriodForClose = 10;
+    server = new HttpServer(createRequestHandler(100), serverOptions);
+    await server.start();
+    const agent = new Agent({keepAlive: true});
+    // Send a request with keep-alive
+    const req = httpGetAsync(server.url, agent);
+    // Wait until the request is accepted by the server
+    await pEvent(server.server, 'request');
+    // Stop the server
+    await server.stop();
+    // No more new connections are accepted
+    await expect(httpGetAsync(server.url)).to.be.rejectedWith(/ECONNREFUSED/);
+    // The inflight request is aborted as it takes longer than the grace period
+    await expect(req).to.be.rejectedWith(/socket hang up/);
   });
 
   it('exports original port', async () => {
@@ -262,6 +300,17 @@ describe('HttpServer (integration)', () => {
     res: ServerResponse,
   ): void {
     res.end();
+  }
+
+  function createRequestHandler(delay: number) {
+    return function dummyRequestHandlerWithDelay(
+      req: IncomingMessage,
+      res: ServerResponse,
+    ): void {
+      setTimeout(() => {
+        res.end();
+      }, delay);
+    };
   }
 
   async function stopServer() {

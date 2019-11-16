@@ -10,6 +10,7 @@ import * as https from 'https';
 import {AddressInfo, ListenOptions} from 'net';
 import * as os from 'os';
 import pEvent from 'p-event';
+import * as stoppable from 'stoppable';
 
 export type RequestListener = (
   req: IncomingMessage,
@@ -21,6 +22,12 @@ export type RequestListener = (
  *
  */
 export interface HttpOptions extends ListenOptions {
+  /**
+   * Milliseconds to wait before force-closing connections. Defaults to
+   * Infinity (don't force-close). If you want to immediately kill all sockets
+   * you can use a grace of 0.
+   */
+  gracePeriodForClose?: number;
   protocol?: 'http';
 }
 
@@ -29,6 +36,12 @@ export interface HttpOptions extends ListenOptions {
  *
  */
 export interface HttpsOptions extends ListenOptions, https.ServerOptions {
+  /**
+   * Milliseconds to wait before force-closing connections. Defaults to
+   * Infinity (don't force-close). If you want to immediately kill all sockets
+   * you can use a grace of 0.
+   */
+  gracePeriodForClose?: number;
   protocol: 'https';
 }
 
@@ -53,6 +66,7 @@ export class HttpServer {
   private _address: string | AddressInfo;
   private requestListener: RequestListener;
   readonly server: http.Server | https.Server;
+  private _stoppable: stoppable.StoppableServer;
   private serverOptions: HttpServerOptions;
 
   /**
@@ -83,6 +97,13 @@ export class HttpServer {
     } else {
       this.server = http.createServer(this.requestListener);
     }
+    // Set up graceful stop for http server
+    if (typeof this.serverOptions.gracePeriodForClose === 'number') {
+      this._stoppable = stoppable(
+        this.server,
+        this.serverOptions.gracePeriodForClose,
+      );
+    }
   }
 
   /**
@@ -103,7 +124,11 @@ export class HttpServer {
    */
   public async stop() {
     if (!this._listening) return;
-    this.server.close();
+    if (this._stoppable != null) {
+      this._stoppable.stop();
+    } else {
+      this.server.close();
+    }
     await pEvent(this.server, 'close');
     this._listening = false;
   }
