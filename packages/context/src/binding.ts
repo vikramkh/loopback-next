@@ -521,7 +521,7 @@ export class Binding<T = BoundValue> {
     this._setValueGetter((ctx, options) => {
       const instOrPromise = instantiateClass(ctor, ctx, options.session);
       if (!options.asProxyWithInterceptors) return instOrPromise;
-      return createInterceptionProxyFromInstance(instOrPromise, ctx);
+      return createInterceptionProxyFromInstance(instOrPromise, ctx, this);
     });
     this._valueConstructor = ctor;
     return this;
@@ -624,6 +624,7 @@ export class Binding<T = BoundValue> {
 function createInterceptionProxyFromInstance<T>(
   instOrPromise: ValueOrPromise<T>,
   context: Context,
+  binding?: Binding<unknown>,
 ) {
   return transformValueOrPromise(instOrPromise, inst => {
     if (typeof inst !== 'object') return inst;
@@ -631,6 +632,7 @@ function createInterceptionProxyFromInstance<T>(
       // Cast inst from `T` to `object`
       (inst as unknown) as object,
       context,
+      binding,
     ) as unknown) as T;
   });
 }

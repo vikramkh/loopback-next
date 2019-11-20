@@ -10,7 +10,7 @@ import {
   Provider,
   ValueOrPromise,
 } from '@loopback/context';
-import {Request, RestBindings} from '../../..';
+import {BaseRoute, Request, RestBindings} from '../../..';
 
 /**
  * Execution status
@@ -61,6 +61,12 @@ export async function cache<T>(
   next: () => ValueOrPromise<T>,
 ) {
   status.returnFromCache = false;
+  if (
+    invocationCtx.source == null ||
+    !(invocationCtx.source instanceof BaseRoute)
+  ) {
+    return next();
+  }
   const req = await invocationCtx.get(RestBindings.Http.REQUEST, {
     optional: true,
   });

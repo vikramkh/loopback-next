@@ -156,8 +156,8 @@ describe('Interception proxy', () => {
     expect(msg).to.equal('Hello, JOHN');
     expect(events).to.eql([
       'convertName: before-greet',
-      'log: before-greet',
-      'log: after-greet',
+      'log: [my-controller] before-greet',
+      'log: [my-controller] after-greet',
       'convertName: after-greet',
     ]);
   });
@@ -198,8 +198,8 @@ describe('Interception proxy', () => {
     expect(msg).to.equal('Hello, JOHN');
     expect(events).to.eql([
       'convertName: before-greet',
-      'log: before-greet',
-      'log: after-greet',
+      'log: [my-controller] before-greet',
+      'log: [my-controller] after-greet',
       'convertName: after-greet',
     ]);
   });
@@ -207,9 +207,10 @@ describe('Interception proxy', () => {
   let events: string[];
 
   const log: Interceptor = async (invocationCtx, next) => {
-    events.push('log: before-' + invocationCtx.methodName);
+    const source = invocationCtx.source ? `[${invocationCtx.source}] ` : '';
+    events.push(`log: ${source}before-${invocationCtx.methodName}`);
     const result = await next();
-    events.push('log: after-' + invocationCtx.methodName);
+    events.push(`log: ${source}after-${invocationCtx.methodName}`);
     return result;
   };
 

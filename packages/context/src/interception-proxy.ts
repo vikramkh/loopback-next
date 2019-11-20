@@ -3,6 +3,7 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
+import {Binding} from './binding';
 import {Context} from './context';
 import {invokeMethodWithInterceptors} from './interceptor';
 import {InvocationArgs} from './invocation';
@@ -63,7 +64,7 @@ export type AsyncProxy<T> = {[P in keyof T]: AsInterceptedFunction<T[P]>};
  * See https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Proxy
  */
 export class InterceptionHandler<T extends object> implements ProxyHandler<T> {
-  constructor(private context = new Context()) {}
+  constructor(private context = new Context(), private source?: string) {}
 
   get(target: T, propertyName: PropertyKey, receiver: unknown) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,6 +78,7 @@ export class InterceptionHandler<T extends object> implements ProxyHandler<T> {
           target,
           propertyName,
           args,
+          {source: this.source},
         );
       };
     } else {
@@ -93,6 +95,11 @@ export class InterceptionHandler<T extends object> implements ProxyHandler<T> {
 export function createProxyWithInterceptors<T extends object>(
   target: T,
   context?: Context,
+  binding?: Binding<unknown>,
 ): AsyncProxy<T> {
-  return new Proxy(target, new InterceptionHandler(context)) as AsyncProxy<T>;
+  const source = binding && binding.key;
+  return new Proxy(
+    target,
+    new InterceptionHandler(context, source),
+  ) as AsyncProxy<T>;
 }

@@ -47,6 +47,8 @@ export class InvocationContext extends Context {
     public readonly target: object,
     public readonly methodName: string,
     public readonly args: InvocationArgs,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public readonly source?: any,
   ) {
     super(parent);
   }
@@ -129,6 +131,12 @@ export type InvocationOptions = {
    * Skip invocation of interceptors
    */
   skipInterceptors?: boolean;
+  /**
+   * Information about the source object that makes the invocation. For REST,
+   * it's a `Route`. For injected proxies, it's a `Binding`.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  source?: any;
 };
 
 /**
